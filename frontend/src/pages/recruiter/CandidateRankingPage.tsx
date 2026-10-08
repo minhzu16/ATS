@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Trophy, Medal, Award } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Trophy, Medal, Award, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { evaluationService } from "@/services/evaluationService";
 import type { CandidateRanking } from "@/types/evaluation";
+import { StageBadge } from "@/components/shared/StageBadge";
 
 const RANK_STYLES: Record<number, { bg: string; text: string; icon: typeof Trophy }> = {
-  1: { bg: "bg-yellow-50", text: "text-yellow-700", icon: Trophy },
-  2: { bg: "bg-gray-100", text: "text-gray-600", icon: Medal },
-  3: { bg: "bg-orange-50", text: "text-orange-700", icon: Award },
+  1: { bg: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300", text: "text-amber-700", icon: Trophy },
+  2: { bg: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300", text: "text-slate-600", icon: Medal },
+  3: { bg: "bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300", text: "text-orange-700", icon: Award },
 };
-
-function stageLabel(stage: string): string {
-  return stage.charAt(0) + stage.slice(1).toLowerCase();
-}
 
 export default function CandidateRankingPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -41,29 +38,40 @@ export default function CandidateRankingPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Candidate Ranking</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Candidates ranked by interview performance for this job position
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-2 h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground -ml-2"
+            onClick={() => navigate(jobId ? `/jobs/${jobId}` : "/jobs")}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Back to job opening</span>
+          </Button>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Candidate Ranking</h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Candidates ordered by cumulative interview evaluation score
+          </p>
+        </div>
       </div>
 
       {/* Summary Stats */}
       {!loading && rankings.length > 0 && (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">Total Candidates</p>
-            <p className="mt-1 text-2xl font-bold">{rankings.length}</p>
+          <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <p className="text-xs font-medium text-muted-foreground">Evaluated Candidates</p>
+            <p className="mt-1 text-2xl font-bold font-mono-numbers text-foreground">{rankings.length}</p>
           </div>
-          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">Highest Score</p>
-            <p className="mt-1 text-2xl font-bold text-green-600">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <p className="text-xs font-medium text-muted-foreground">Top Score</p>
+            <p className="mt-1 text-2xl font-bold font-mono-numbers text-emerald-600">
               {rankings[0]?.overallScore.toFixed(1) ?? "—"}
             </p>
           </div>
-          <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
-            <p className="text-sm text-muted-foreground">Average Score</p>
-            <p className="mt-1 text-2xl font-bold">
+          <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <p className="text-xs font-medium text-muted-foreground">Average Score</p>
+            <p className="mt-1 text-2xl font-bold font-mono-numbers text-foreground">
               {rankings.length > 0
                 ? (rankings.reduce((sum, r) => sum + r.overallScore, 0) / rankings.length).toFixed(1)
                 : "—"}
@@ -142,7 +150,7 @@ export default function CandidateRankingPage() {
                         {r.experienceYears != null ? `${r.experienceYears} years` : "—"}
                       </td>
                       <td className="px-5 py-4">
-                        <Badge variant="outline">{stageLabel(r.stage)}</Badge>
+                        <StageBadge stage={r.stage} />
                       </td>
                       <td className="px-5 py-4 text-sm text-muted-foreground">
                         {new Date(r.appliedAt).toLocaleDateString()}

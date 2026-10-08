@@ -72,15 +72,20 @@ export default function Sidebar() {
     });
 
     return (
-        <aside className="flex h-screen w-64 flex-col border-r border-border bg-sidebar">
-            {/* Logo */}
-            <div className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border px-6">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Briefcase className="h-4 w-4" />
+        <aside className="flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar">
+            {/* Logo & Brand Identity */}
+            <div className="flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border px-5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs ring-1 ring-primary/20">
+                    <Briefcase className="h-4.5 w-4.5" />
                 </div>
-                <span className="text-lg font-bold text-sidebar-foreground whitespace-nowrap overflow-hidden text-ellipsis">
-                    {appName}
-                </span>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold text-sidebar-foreground truncate tracking-tight">
+                        {appName}
+                    </span>
+                    <span className="text-[11px] font-medium text-muted-foreground truncate">
+                        Talent Acquisition
+                    </span>
+                </div>
             </div>
 
             {/* Navigation */}
@@ -93,10 +98,10 @@ export default function Sidebar() {
                                 end={to === "/jobs"}
                                 className={({ isActive }) =>
                                     cn(
-                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                                         isActive
-                                            ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                            ? "bg-primary text-primary-foreground shadow-xs"
+                                            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                                     )
                                 }
                             >
@@ -112,10 +117,10 @@ export default function Sidebar() {
                                 to="/jobs/pending-approval"
                                 className={({ isActive }) =>
                                     cn(
-                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                                         isActive
-                                            ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                            ? "bg-primary text-primary-foreground shadow-xs"
+                                            : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                                     )
                                 }
                             >
@@ -127,16 +132,21 @@ export default function Sidebar() {
 
                     {isHr && (
                         <>
+                            <li className="pt-4 pb-1">
+                                <p className="px-3 text-xs font-medium text-muted-foreground/80">
+                                    Recruitment
+                                </p>
+                            </li>
                             {hrNavItems.map(({ to, icon: Icon, label }) => (
                                 <li key={to}>
                                     <NavLink
                                         to={to}
                                         className={({ isActive }) =>
                                             cn(
-                                                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                                                 isActive
-                                                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                                                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                                             )
                                         }
                                     >
@@ -151,8 +161,8 @@ export default function Sidebar() {
                     {/* Admin section */}
                     {isAdmin && (
                         <>
-                            <li className="pt-3">
-                                <p className="mb-1 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <li className="pt-4 pb-1">
+                                <p className="px-3 text-xs font-medium text-muted-foreground/80">
                                     Administration
                                 </p>
                             </li>
@@ -162,10 +172,10 @@ export default function Sidebar() {
                                         to={to}
                                         className={({ isActive }) =>
                                             cn(
-                                                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
                                                 isActive
-                                                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                                                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                                    : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                                             )
                                         }
                                     >
@@ -181,8 +191,8 @@ export default function Sidebar() {
 
             {/* Footer */}
             <div className="shrink-0 border-t border-sidebar-border p-4">
-                <p className="text-center text-xs text-muted-foreground">
-                    © 2025 Enterprise ATS
+                <p className="text-center text-xs text-muted-foreground/70">
+                    Enterprise ATS v1.0
                 </p>
             </div>
         </aside>

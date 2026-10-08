@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { MoreHorizontal, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { JobApplicantItem, JobDetailResponse } from "@/types/job-detail";
-import type { CandidateStage } from "@/types/candidate";
 import { cn } from "@/lib/utils";
+import { StageBadge } from "@/components/shared/StageBadge";
 
 type TabKey = "overview" | "candidates" | "team";
 
@@ -42,10 +42,6 @@ function splitDescription(description: string | null): string[] {
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter((line) => line.length > 0);
-}
-
-function stageLabel(stage: CandidateStage): string {
-    return stage.charAt(0) + stage.slice(1).toLowerCase();
 }
 
 function formatRelativeDate(isoDate: string): string {
@@ -202,7 +198,7 @@ export function JobDetailCard({ job }: JobDetailCardProps) {
                                                 </div>
                                             </td>
                                             <td className="px-5 py-4">
-                                                <Badge variant="outline">{stageLabel(item.stage)}</Badge>
+                                                <StageBadge stage={item.stage} />
                                             </td>
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-1 text-sm text-muted-foreground">

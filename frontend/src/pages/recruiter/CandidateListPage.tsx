@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Plus, Star, MoreHorizontal, Upload } from "lucide-react";
+import { Search, Plus, Star, ChevronRight, Upload, Filter, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { candidateService } from "@/services/candidateService";
 import type { CandidateListItem, CandidateStage } from "@/types/candidate";
+import { StageBadge, stageLabel } from "@/components/shared/StageBadge";
 import AddCandidateDialog from "@/components/shared/AddCandidateDialog";
 import ImportCandidatesDialog from "@/components/shared/ImportCandidatesDialog";
 
@@ -17,10 +17,6 @@ const STAGES: CandidateStage[] = [
   "HIRED",
   "REJECTED",
 ];
-
-function stageLabel(stage: CandidateStage): string {
-  return stage.charAt(0) + stage.slice(1).toLowerCase();
-}
 
 function formatRelativeDate(isoDate: string): string {
   const hasTimezone = /Z$|[+-]\d{2}:\d{2}$/.test(isoDate);
@@ -35,16 +31,16 @@ function formatRelativeDate(isoDate: string): string {
 
   if (diffMs < hour) {
     const minutes = Math.max(1, Math.floor(diffMs / minute));
-    return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+    return `${minutes}m ago`;
   }
 
   if (diffMs < day) {
     const hours = Math.floor(diffMs / hour);
-    return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+    return `${hours}h ago`;
   }
 
   const days = Math.floor(diffMs / day);
-  return `${days} day${days > 1 ? "s" : ""} ago`;
+  return `${days}d ago`;
 }
 
 function initials(name: string): string {
@@ -106,39 +102,71 @@ export default function CandidateListPage() {
       return byStage;
     }
 
-    return byStage.filter((item) => item.fullName.toLowerCase().includes(normalizedSearch));
+    return byStage.filter((item) =>
+      item.fullName.toLowerCase().includes(normalizedSearch) ||
+      item.email.toLowerCase().includes(normalizedSearch)
+    );
   }, [candidates, search, jobFilter, stageFilter]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">Candidate List</h1>
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Candidates
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Applicant talent pool and active recruitment progression
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5"
+            onClick={() => setImportOpen(true)}
+          >
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button
+            size="sm"
+            className="h-9 gap-1.5 shadow-xs"
+            onClick={() => setAddOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Add Candidate
+          </Button>
+        </div>
       </div>
 
-      <section className="space-y-2">
-        <h2 className="text-xl font-semibold">Candidates</h2>
-        <p className="text-sm text-muted-foreground">A list of all candidates across all jobs.</p>
-      </section>
-
-      <section className="rounded-lg border border-border bg-card p-4">
-        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full md:max-w-xl">
+      {/* Main Content Area */}
+      <div className="rounded-xl border border-border bg-card shadow-xs">
+        {/* Search & Filter Toolbar */}
+        <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
+          <div className="relative w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search candidates..."
-              className="pl-9"
+              placeholder="Search by candidate name or email…"
+              className="h-9 pl-9 text-sm"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1">
+              <Filter className="h-3.5 w-3.5" />
+              <span>Filter:</span>
+            </div>
             <select
               value={jobFilter}
               onChange={(event) => setJobFilter(event.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:border-border/80 focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="ALL">All Jobs</option>
+              <option value="ALL">All Requisitions</option>
               {jobOptions
                 .filter((item) => item !== "ALL")
                 .map((job) => (
@@ -150,7 +178,7 @@ export default function CandidateListPage() {
             <select
               value={stageFilter}
               onChange={(event) => setStageFilter(event.target.value as "ALL" | CandidateStage)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+              className="h-9 rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground transition-colors hover:border-border/80 focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="ALL">All Stages</option>
               {STAGES.map((stage) => (
@@ -159,78 +187,108 @@ export default function CandidateListPage() {
                 </option>
               ))}
             </select>
-            <Button size="sm" className="h-9" variant="outline" onClick={() => setImportOpen(true)}>
-              <Upload className="h-4 w-4" />
-              Import CSV
-            </Button>
-            <Button size="sm" className="h-9" onClick={() => setAddOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Add Candidate
-            </Button>
           </div>
         </div>
 
-        {error && <p className="py-4 text-sm text-destructive">{error}</p>}
+        {error && (
+          <div className="p-6 text-sm text-destructive bg-destructive/5 border-b border-destructive/20">
+            {error}
+          </div>
+        )}
 
+        {/* Candidate Table */}
         {!error && (
-          <div className="overflow-hidden rounded-lg border border-border">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted/30">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-muted/40 text-xs font-semibold text-muted-foreground">
                 <tr>
-                  <th className="px-5 py-3 text-left text-sm font-semibold">Name</th>
-                  <th className="px-5 py-3 text-left text-sm font-semibold">Applied For</th>
-                  <th className="px-5 py-3 text-left text-sm font-semibold">Stage</th>
-                  <th className="px-5 py-3 text-left text-sm font-semibold">Rating</th>
-                  <th className="px-5 py-3 text-left text-sm font-semibold">Applied Date</th>
-                  <th className="px-5 py-3 text-right text-sm font-semibold" />
+                  <th className="px-5 py-3">Candidate</th>
+                  <th className="px-5 py-3">Applied Position</th>
+                  <th className="px-5 py-3">Pipeline Stage</th>
+                  <th className="px-5 py-3">Evaluation Score</th>
+                  <th className="px-5 py-3">Applied</th>
+                  <th className="px-5 py-3 text-right">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
-                      Loading candidates...
+                    <td colSpan={6} className="px-5 py-12 text-center text-sm text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        <span>Loading candidate roster…</span>
+                      </div>
                     </td>
                   </tr>
                 ) : filteredCandidates.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
-                      No candidates found.
+                    <td colSpan={6} className="px-5 py-16 text-center text-sm text-muted-foreground">
+                      <div className="mx-auto flex max-w-xs flex-col items-center">
+                        <Users className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                        <p className="font-medium text-foreground">No matching candidates</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {search || jobFilter !== "ALL" || stageFilter !== "ALL"
+                            ? "Try adjusting your filters or search keywords."
+                            : "Get started by adding or importing your first candidate."}
+                        </p>
+                        {(search || jobFilter !== "ALL" || stageFilter !== "ALL") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mt-3 text-xs"
+                            onClick={() => {
+                              setSearch("");
+                              setJobFilter("ALL");
+                              setStageFilter("ALL");
+                            }}
+                          >
+                            Reset filters
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   filteredCandidates.map((item) => (
                     <tr
                       key={`${item.candidateId}-${item.jobTitle}`}
-                      className="cursor-pointer bg-background hover:bg-muted/20"
+                      className="group cursor-pointer transition-colors hover:bg-muted/30"
                       onClick={() => navigate(`/candidates/${item.candidateId}`)}
                     >
-                      <td className="px-5 py-4">
+                      <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted font-semibold text-primary">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary ring-1 ring-primary/20">
                             {initials(item.fullName)}
-                          </span>
-                          <div>
-                            <p className="font-medium">{item.fullName}</p>
-                            <p className="text-sm text-muted-foreground">{item.email}</p>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                              {item.fullName}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {item.email}
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-sm text-muted-foreground">{item.jobTitle}</td>
-                      <td className="px-5 py-4">
-                        <Badge variant="outline">{stageLabel(item.stage)}</Badge>
+                      <td className="px-5 py-3.5 text-xs font-medium text-foreground/80">
+                        {item.jobTitle}
                       </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Star className="h-4 w-4" />
-                          {item.rating ?? "-"}
+                      <td className="px-5 py-3.5">
+                        <StageBadge stage={item.stage} />
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="inline-flex items-center gap-1 text-xs font-medium text-foreground">
+                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                          <span>{item.rating != null ? item.rating : "—"}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-sm text-muted-foreground">
+                      <td className="px-5 py-3.5 text-xs text-muted-foreground">
                         {formatRelativeDate(item.appliedAt)}
                       </td>
-                      <td className="px-5 py-4 text-right text-muted-foreground">
-                        <MoreHorizontal className="ml-auto h-4 w-4" />
+                      <td className="px-5 py-3.5 text-right">
+                        <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground/40 group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
                       </td>
                     </tr>
                   ))
@@ -239,7 +297,19 @@ export default function CandidateListPage() {
             </table>
           </div>
         )}
-      </section>
+
+        {/* Footer info bar */}
+        {!loading && !error && filteredCandidates.length > 0 && (
+          <div className="border-t border-border px-5 py-3 text-xs text-muted-foreground flex items-center justify-between">
+            <span>
+              Showing {filteredCandidates.length} of {candidates.length} candidates
+            </span>
+            <span className="text-[11px] text-muted-foreground/70">
+              Click any candidate to review dossier and evaluations
+            </span>
+          </div>
+        )}
+      </div>
 
       <AddCandidateDialog
         open={addOpen}

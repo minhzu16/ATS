@@ -86,39 +86,34 @@ export default function JobListPage() {
     }
 
     return (
-        <div className="space-y-6 px-4 sm:px-6 lg:px-8">
-            <div className="sm:flex sm:items-center">
-                <div className="sm:flex-auto">
-                    <h1 className="text-base font-semibold leading-6 text-foreground">Job Postings</h1>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        A list of job postings including title and status. Use search to filter by title.
+        <div className="space-y-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground">Job Openings</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                        Corporate job requisitions, departmental postings, and lifecycle status
                     </p>
                 </div>
                 {showPostJob && (
-                    <div className="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-                        <Button asChild className="gap-1">
-                            <Link to="/jobs/new">
-                                <Plus className="h-4 w-4" aria-hidden />
-                                Post Job
-                            </Link>
-                        </Button>
-                    </div>
+                    <Button asChild size="sm" className="gap-1.5 shadow-xs">
+                        <Link to="/jobs/new">
+                            <Plus className="h-4 w-4" aria-hidden />
+                            Post Opening
+                        </Link>
+                    </Button>
                 )}
             </div>
 
-            <div className="mt-6 flex flex-col gap-4 rounded-lg border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-end">
-                <div className="sm:flex-1">
+            <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
                     <SearchBar value={keywordInput} onChange={setKeywordInput} />
                 </div>
-                <div className="sm:w-40">
-                    <label htmlFor="job-page-size" className="mb-1 block text-xs font-medium text-muted-foreground">
-                        Per page
-                    </label>
+                <div className="sm:w-36">
                     <select
                         id="job-page-size"
                         className={cn(
-                            "flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm",
-                            "ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            "flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground",
+                            "hover:border-border/80 focus:outline-none focus:ring-1 focus:ring-ring"
                         )}
                         value={size}
                         onChange={(e) => {
@@ -128,7 +123,7 @@ export default function JobListPage() {
                     >
                         {PAGE_SIZE_OPTIONS.map((n) => (
                             <option key={n} value={n}>
-                                {n} / page
+                                {n} per page
                             </option>
                         ))}
                     </select>

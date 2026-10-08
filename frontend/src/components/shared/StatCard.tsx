@@ -5,33 +5,42 @@ interface StatCardProps {
     title: string;
     value: string | number;
     icon: LucideIcon;
-    iconBgClass: string;
-    iconColorClass: string;
+    iconBgClass?: string;
+    iconColorClass?: string;
+    description?: string;
 }
 
 export default function StatCard({
     title,
     value,
     icon: Icon,
-    iconBgClass,
-    iconColorClass,
+    iconBgClass = "bg-primary/5",
+    iconColorClass = "text-primary",
+    description,
 }: StatCardProps) {
     return (
-        <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-medium text-muted-foreground">{title}</p>
-                    <p className="mt-1 text-3xl font-bold text-card-foreground">
+        <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-xs">
+            <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">
+                        {title}
+                    </p>
+                    <p className="text-2xl font-bold tracking-tight text-foreground font-mono-numbers">
                         {value}
                     </p>
+                    {description && (
+                        <p className="text-xs text-muted-foreground/80">
+                            {description}
+                        </p>
+                    )}
                 </div>
                 <div
                     className={cn(
-                        "flex h-12 w-12 items-center justify-center rounded-full",
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-border/50",
                         iconBgClass,
                     )}
                 >
-                    <Icon className={cn("h-5 w-5", iconColorClass)} />
+                    <Icon className={cn("h-4.5 w-4.5", iconColorClass)} />
                 </div>
             </div>
         </div>
