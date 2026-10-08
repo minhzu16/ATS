@@ -1,0 +1,1 @@
+export { JobDetailCard } from "./JobDetailCard";

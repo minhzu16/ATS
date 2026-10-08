@@ -1,0 +1,46 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.sw?
+.settings/
+.project
+.classpath
+
+# Build artifacts & dependencies
+target/
+build/
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment / local configs
+.env
+.env.local
+.env.*.local
+application-local.properties
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local tooling / AI workspace config
+.agents/
+

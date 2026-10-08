@@ -1,0 +1,339 @@
+
+---
+
+# 🟦 ATS WORKFLOW & GENERAL RULES
+
+- Không refactor code không liên quan; sửa lỗi bảo mật và lỗi nghiệp vụ được phép nếu có test đi kèm.
+- Thay đổi ảnh hưởng cả hai phía (backend & frontend) bắt buộc ghi vào update.md.
+- Hệ thống phân quyền sử dụng 4 vai trò chính thức: SYSTEM_ADMIN, HR_MANAGER, HR, INTERVIEWER.
+
+
+## ⚠️ Component Organization (CRITICAL)
+
+### 1. One Component Per File (MANDATORY)
+
+* Each React component MUST be in its own file
+* File name must match component name (PascalCase)
+
+Example:
+Button.tsx → Button component
+
+---
+
+### 2. Folder Structure (REQUIRED)
+
+src/
+├── components/
+│   ├── Button/
+│   │   ├── Button.tsx
+│   │   ├── Button.types.ts (optional)
+│   │   └── index.ts
+├── pages/
+│   └── Login/
+│       ├── LoginPage.tsx
+│       └── components/
+
+---
+
+### 3. Naming Convention
+
+| Type      | Format            |
+| --------- | ----------------- |
+| Component | ComponentName.tsx |
+| Page      | PageName.tsx      |
+| Hook      | useSomething.ts   |
+| Service   | somethingApi.ts   |
+| Types     | types.ts          |
+
+---
+
+## 📦 Imports
+
+* Always use alias `@` for imports from src
+
+✅ Correct:
+import { Button } from "@/components/Button";
+
+❌ Avoid:
+import { Button } from "../../../components/Button";
+
+---
+
+## 🔌 Services (Module-Based)
+
+Structure:
+
+services/
+├── auth/
+│   ├── api.ts
+│   └── queries.ts
+
+Rules:
+
+* api.ts → API calls (axios)
+* queries.ts → React Query hooks
+* Do NOT define useQuery/useMutation inside components
+
+---
+
+## 🎨 Styling (TailwindCSS)
+
+* Use Tailwind CSS for all styling
+* Avoid inline styles
+* Reuse utility classes
+
+✅ Correct:
+
+<div className="flex items-center gap-2 p-4 bg-white rounded-xl shadow" />
+
+❌ Avoid:
+
+<div style={{ display: "flex" }} />
+
+---
+
+## 🔷 TypeScript Rules
+
+* Do NOT use `any`
+* Always define types/interfaces for props
+
+Example:
+interface ButtonProps {
+label: string;
+onClick: () => void;
+}
+
+export function Button({ label, onClick }: ButtonProps) {
+return <button onClick={onClick}>{label}</button>;
+}
+
+---
+
+## ⚛️ React Best Practices
+
+### 1. Use Functional Components
+
+* Always use function components with hooks
+* Do NOT use class components
+
+---
+
+### 2. Keep Components Small
+
+* Each component < 200 lines
+* Split large components into smaller ones
+
+---
+
+### 3. Reusability
+
+* Check existing components before creating new ones
+* Move reusable UI into src/components
+
+---
+
+### 4. State Management
+
+* useState → simple state
+* useReducer → complex logic
+* React Query → server state
+
+---
+
+### 5. Hooks
+
+* Extract reusable logic into custom hooks
+* Hook naming must start with `use`
+
+---
+
+### 6. Avoid Unnecessary Re-renders
+
+* Use useMemo / useCallback when needed
+* Use React.memo for heavy components
+
+---
+
+### 7. Clean Code Rules
+
+❌ Avoid:
+
+* console.log
+* unused variables
+* duplicate code
+
+✅ Always:
+
+* Write readable code
+* Use meaningful variable names
+* Keep functions small
+
+---
+
+---
+
+# 🟥 BACKEND RULES (Spring Boot)
+
+---
+
+## ⚠️ Project Structure (MANDATORY)
+
+backend/
+├── controller/
+├── service/
+│   ├── impl/
+├── repository/
+├── entity/
+├── dto/
+├── mapper/
+├── config/
+├── exception/
+
+---
+
+## 🧩 Layered Architecture
+
+### 1. Controller
+
+* Handle request/response only
+* No business logic
+
+---
+
+### 2. Service
+
+Interface:
+public interface UserService {
+UserDTO getById(Long id);
+}
+
+Implementation:
+@Service
+public class UserServiceImpl implements UserService {
+}
+
+---
+
+### 3. Repository
+
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+
+---
+
+## 🔄 DTO Pattern (MANDATORY) Look for reusing dto before creating a new one
+
+* Do NOT return Entity directly
+* Always use DTO
+
+Flow:
+Controller → DTO → Service → Entity
+
+---
+
+## 🔁 Mapping
+
+* Must have:
+
+  * toDTO()
+  * toEntity()
+* Or use MapStruct
+
+---
+
+## 🔐 Security
+
+* Use Spring Security
+* Role-based access (ADMIN, CUSTOMER, STAFF)
+* Use JWT with environment variables
+
+---
+
+## ⚙️ Configuration
+
+* Use environment variables
+
+Example:
+spring.datasource.url=${SPRING_DATASOURCE_URL}
+
+* Do NOT hardcode secrets
+
+---
+
+## 🗄️ Database
+
+* Use JPA/Hibernate
+* Avoid raw SQL unless necessary
+
+Naming:
+
+* Table: snake_case
+* Column: snake_case
+
+---
+
+## 🧠 Exception Handling
+
+Use global handler:
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+}
+
+---
+
+## 📦 Validation
+
+Use:
+@Valid
+@NotNull
+@Email
+
+---
+
+## 🔍 Logging
+
+✅ Use:
+@Slf4j
+log.info("...");
+
+❌ Avoid:
+System.out.println
+
+---
+
+## 🔄 Transaction
+
+Use:
+@Transactional
+
+---
+
+## 📡 API Convention
+
+| Method | Purpose  |
+| ------ | -------- |
+| GET    | Retrieve |
+| POST   | Create   |
+| PUT    | Update   |
+| DELETE | Delete   |
+
+---
+
+## 🚫 Bad Practices
+
+* Business logic in Controller
+* Returning Entity directly
+* Hardcoding config
+* Direct DB access in Controller
+
+---
+
+## ✅ Best Practices
+
+* Clean architecture
+* Clear separation of layers
+* Use DTO + Mapper
+* Write maintainable code
+
+---
