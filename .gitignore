@@ -42,6 +42,4 @@ __pycache__/
 *.py[cod]
 
 # Local tooling / AI workspace config
-.agents/*
-!.agents/skills/
-
+.agents/

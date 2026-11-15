@@ -7,12 +7,14 @@ import fptu.sba301.ats.dto.request.OfferApprovalRequest;
 import fptu.sba301.ats.dto.response.OfferApprovalResponse;
 import fptu.sba301.ats.dto.response.OfferResponse;
 import fptu.sba301.ats.entity.Application;
+import fptu.sba301.ats.entity.Job;
 import fptu.sba301.ats.entity.Offer;
 import fptu.sba301.ats.entity.OfferApproval;
 import fptu.sba301.ats.entity.User;
 import fptu.sba301.ats.enums.ApprovalStatus;
 import fptu.sba301.ats.enums.ApplicationStage;
 import fptu.sba301.ats.enums.ApplicationStatus;
+import fptu.sba301.ats.enums.JobStatus;
 import fptu.sba301.ats.enums.OfferStatus;
 import fptu.sba301.ats.exception.BusinessException;
 import fptu.sba301.ats.repository.ApplicationRepository;
@@ -53,6 +55,35 @@ public class OfferServiceImpl implements OfferService {
             throw new BusinessException(
                     "A new offer can only be created for candidates whose current stage is INTERVIEW.",
                     HttpStatus.BAD_REQUEST);
+        }
+
+        // Validate offer salary
+        if (request.getSalary() == null || request.getSalary().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            throw new BusinessException("Offer salary must be a positive amount.", HttpStatus.BAD_REQUEST);
+        }
+
+        // Enforce Ashby HQ & BambooHR Requisition Headcount & Budget Approval Matrix
+        Job job = application.getJob();
+        if (job != null) {
+            // 1. Requisition status must be APPROVED before creating an offer
+            if (job.getStatus() != JobStatus.APPROVED) {
+                throw new BusinessException(
+                        "Cannot create offer: Job requisition [" + job.getTitle() + "] is not approved (Current status: " + job.getStatus() + "). Ashby HQ & BambooHR policy requires an APPROVED requisition before extending offers.",
+                        HttpStatus.CONFLICT);
+            }
+
+            // 2. Headcount limit validation against active offers (PENDING_APPROVAL, APPROVED, SENT, ACCEPTED)
+            if (job.getHeadcount() != null && job.getHeadcount() > 0) {
+                long activeOfferCount = offerRepository.countByJobIdAndStatusIn(
+                        job.getId(),
+                        List.of(OfferStatus.PENDING_APPROVAL, OfferStatus.APPROVED, OfferStatus.SENT, OfferStatus.ACCEPTED)
+                );
+                if (activeOfferCount >= job.getHeadcount()) {
+                    throw new BusinessException(
+                            "Cannot create offer: Requisition headcount limit (" + job.getHeadcount() + ") reached for job [" + job.getTitle() + "]. Additional headcount approval required.",
+                            HttpStatus.CONFLICT);
+                }
+            }
         }
 
         Offer offer = Offer.builder()
