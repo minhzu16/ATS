@@ -87,3 +87,4 @@ Dưới góc độ Kiến trúc sư trưởng lập kế hoạch (Master Impleme
 - **Tính toàn vẹn Dữ liệu:** Không có bất kỳ trường hợp nào xảy ra việc nhảy cóc giai đoạn tuyển dụng hoặc tự phê duyệt thư mời nhận việc.
 - **Biên dịch & Build:** Cả backend (Maven Java 21) và frontend (React 19 / Vite 7) đều biên dịch thành công 100% với **0 Error**.
 - **Hiệu năng & Trải nghiệm:** Tải trang danh sách ứng viên dưới **200ms**, hỗ trợ đầy đủ các thao tác Kanban kéo thả và giao diện thích ứng chuẩn WCAG AA.
+

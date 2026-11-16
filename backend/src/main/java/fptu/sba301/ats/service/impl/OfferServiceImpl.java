@@ -29,10 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,33 +58,12 @@ public class OfferServiceImpl implements OfferService {
         }
 
         // Validate offer salary
-        if (request.getSalary() == null || request.getSalary().compareTo(java.math.BigDecimal.ZERO) <= 0) {
+        if (request.getSalary() == null || request.getSalary().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException("Offer salary must be a positive amount.", HttpStatus.BAD_REQUEST);
         }
 
-        // Enforce Ashby HQ & BambooHR Requisition Headcount & Budget Approval Matrix
-        Job job = application.getJob();
-        if (job != null) {
-            // 1. Requisition status must be APPROVED before creating an offer
-            if (job.getStatus() != JobStatus.APPROVED) {
-                throw new BusinessException(
-                        "Cannot create offer: Job requisition [" + job.getTitle() + "] is not approved (Current status: " + job.getStatus() + "). Ashby HQ & BambooHR policy requires an APPROVED requisition before extending offers.",
-                        HttpStatus.CONFLICT);
-            }
-
-            // 2. Headcount limit validation against active offers (PENDING_APPROVAL, APPROVED, SENT, ACCEPTED)
-            if (job.getHeadcount() != null && job.getHeadcount() > 0) {
-                long activeOfferCount = offerRepository.countByJobIdAndStatusIn(
-                        job.getId(),
-                        List.of(OfferStatus.PENDING_APPROVAL, OfferStatus.APPROVED, OfferStatus.SENT, OfferStatus.ACCEPTED)
-                );
-                if (activeOfferCount >= job.getHeadcount()) {
-                    throw new BusinessException(
-                            "Cannot create offer: Requisition headcount limit (" + job.getHeadcount() + ") reached for job [" + job.getTitle() + "]. Additional headcount approval required.",
-                            HttpStatus.CONFLICT);
-                }
-            }
-        }
+        // Enforce Ashby HQ & BambooHR Requisition Headcount & Budget Approval Matrix via Guard Clause
+        validateRequisitionAndHeadcount(application.getJob());
 
         Offer offer = Offer.builder()
                 .application(application)
@@ -98,6 +77,34 @@ public class OfferServiceImpl implements OfferService {
 
         offer = offerRepository.save(offer);
         return toResponse(offer);
+    }
+
+    /**
+     * Enforce Ashby HQ & BambooHR Requisition Headcount & Budget Approval Matrix
+     * Ensures job requisition is in APPROVED state and within headcount limit before extending offers.
+     */
+    private void validateRequisitionAndHeadcount(Job job) {
+        if (job == null) return;
+
+        // 1. Requisition status guard
+        if (job.getStatus() != JobStatus.APPROVED) {
+            throw new BusinessException(
+                    "Cannot create offer: Job requisition [" + job.getTitle() + "] is not approved (Current status: " + job.getStatus() + "). Ashby HQ & BambooHR policy requires an APPROVED requisition before extending offers.",
+                    HttpStatus.CONFLICT);
+        }
+
+        // 2. Headcount limit guard against active offers (PENDING_APPROVAL, APPROVED, SENT, ACCEPTED)
+        if (job.getHeadcount() == null || job.getHeadcount() <= 0) return;
+
+        long activeOfferCount = offerRepository.countByJobIdAndStatusIn(
+                job.getId(),
+                List.of(OfferStatus.PENDING_APPROVAL, OfferStatus.APPROVED, OfferStatus.SENT, OfferStatus.ACCEPTED)
+        );
+        if (activeOfferCount >= job.getHeadcount()) {
+            throw new BusinessException(
+                    "Cannot create offer: Requisition headcount limit (" + job.getHeadcount() + ") reached for job [" + job.getTitle() + "]. Additional headcount approval required.",
+                    HttpStatus.CONFLICT);
+        }
     }
 
     @Override
@@ -138,7 +145,7 @@ public class OfferServiceImpl implements OfferService {
     public List<OfferResponse> getAllOffers() {
         return offerRepository.findAllByOrderByCreatedAtDesc().stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -266,7 +273,7 @@ public class OfferServiceImpl implements OfferService {
     public List<OfferApprovalResponse> getApprovalHistory(UUID offerId) {
         return approvalRepository.findByOfferIdOrderByCreatedAtDesc(offerId).stream()
                 .map(this::toApprovalResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -348,14 +355,13 @@ public class OfferServiceImpl implements OfferService {
     }
 
     private OfferResponse toResponse(Offer offer) {
+        Application app = offer.getApplication();
         return OfferResponse.builder()
                 .id(offer.getId())
-                .applicationId(offer.getApplication() != null ? offer.getApplication().getId() : null)
-                .applicationStage(offer.getApplication() != null ? offer.getApplication().getStage() : null)
-                .candidateName(offer.getApplication() != null && offer.getApplication().getCandidate() != null
-                        ? offer.getApplication().getCandidate().getFullName() : null)
-                .jobTitle(offer.getApplication() != null && offer.getApplication().getJob() != null
-                        ? offer.getApplication().getJob().getTitle() : null)
+                .applicationId(app != null ? app.getId() : null)
+                .applicationStage(app != null ? app.getStage() : null)
+                .candidateName(app != null && app.getCandidate() != null ? app.getCandidate().getFullName() : null)
+                .jobTitle(app != null && app.getJob() != null ? app.getJob().getTitle() : null)
                 .salary(offer.getSalary())
                 .positionTitle(offer.getPositionTitle())
                 .startDate(offer.getStartDate())

@@ -48,3 +48,4 @@ Hệ thống được đánh giá toàn diện dựa trên 6 trụ cột kỹ th
 ### Bước 4: Tự động hóa CI/CD Test Matrix & Docker Hub Image Scanning
 - **Mục tiêu:** Tự động chạy toàn bộ bộ kiểm thử 23 test và quét bảo mật hình ảnh container trước khi triển khai lên môi trường Production.
 - **Hành động:** Cấu hình GitHub Actions workflow với Trivy Container Scanner và SonarCloud Quality Gate.
+
