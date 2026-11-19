@@ -54,13 +54,15 @@ Copy the environment template in `backend/`:
 ```bash
 cp backend/.env.example backend/.env
 ```
-Ensure you set a secure 64+ byte secret for `JWT_SECRET_KEY`:
-```properties
-JWT_SECRET_KEY=c3VwZXItc2VjdXJlLWp3dC1zZWNyZXQta2V5LXNob3VsZC1iZS1hdC1sZWFzdC02NC1ieXRlcy1sb25nLWZvci1oczUxMi1hbGdvcml0aG0=
+Set a secure, randomly generated secret of at least 64 characters for `JWT_SECRET_KEY` (the backend refuses to start otherwise). Never reuse a key published in docs or examples:
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
 ```
 
 ### 3. Run with Docker Compose (Recommended)
+Compose needs its own `.env` in the project root with the database passwords, `JWT_SECRET_KEY` and `BOOTSTRAP_ADMIN_PASSWORD`; it refuses to start while any of them is empty:
 ```bash
+cp .env.example .env   # then fill in every value
 docker compose up -d --build
 ```
 - Frontend: http://localhost:5173
