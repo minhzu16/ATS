@@ -81,6 +81,7 @@ docker run -d --name ats-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=rootpassword 
 cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
+The `dev` profile seeds demo accounts and sample data, and needs `BOOTSTRAP_ADMIN_PASSWORD` (12+ characters) in `backend/.env`. No profile is active by default, so a production run seeds nothing: create the first administrator yourself.
 
 #### Run Frontend:
 ```bash

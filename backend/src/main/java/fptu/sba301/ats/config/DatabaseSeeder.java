@@ -33,6 +33,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -53,6 +54,19 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final DepartmentRepository departmentRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntityManager entityManager;
+    // Reads OS env vars and backend/.env (imported as Spring properties); System.getenv only saw the former.
+    private final Environment environment;
+
+    static final int MIN_BOOTSTRAP_PASSWORD_LENGTH = 12;
+
+    /** Every seeded account shares this password, so there is no built-in default. */
+    static String requireBootstrapPassword(String value) {
+        if (value == null || value.isBlank() || value.length() < MIN_BOOTSTRAP_PASSWORD_LENGTH) {
+            throw new IllegalStateException("BOOTSTRAP_ADMIN_PASSWORD must be set (at least "
+                    + MIN_BOOTSTRAP_PASSWORD_LENGTH + " characters) to seed the dev accounts; see backend/.env.example");
+        }
+        return value;
+    }
 
     @Override
     @Transactional
@@ -98,8 +112,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         log.info("Seeding Users...");
         Department itDept = getDepartmentByName("IT");
         Department hrDept = getDepartmentByName("HR");
-        String adminEmail = Optional.ofNullable(System.getenv("BOOTSTRAP_ADMIN_EMAIL")).filter(s -> !s.isBlank()).orElse("admin@ats.com");
-        String devPassword = Optional.ofNullable(System.getenv("BOOTSTRAP_ADMIN_PASSWORD")).filter(s -> !s.isBlank()).orElse("Password123!");
+        String adminEmail = Optional.ofNullable(environment.getProperty("BOOTSTRAP_ADMIN_EMAIL")).filter(s -> !s.isBlank()).orElse("admin@ats.com");
+        String devPassword = requireBootstrapPassword(environment.getProperty("BOOTSTRAP_ADMIN_PASSWORD"));
         String encodedPassword = passwordEncoder.encode(devPassword);
 
         userRepository.save(User.builder()
