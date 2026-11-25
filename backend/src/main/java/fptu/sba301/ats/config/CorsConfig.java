@@ -22,14 +22,14 @@ public class CorsConfig {
 
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
                 .map(String::trim)
-                .filter(s -> !s.isEmpty())
+                .filter(s -> !s.isEmpty() && !"*".equals(s))
                 .toList();
 
-        configuration.setAllowedOriginPatterns(origins.isEmpty() ? List.of("http://localhost:5173") : origins);
+        configuration.setAllowedOrigins(origins.isEmpty() ? List.of("http://localhost:5173") : origins);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
