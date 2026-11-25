@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Briefcase, Calendar, CalendarOff, Users, ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
@@ -34,25 +34,35 @@ export default function DashboardPage() {
     const [stats, setStats] = useState<DashboardStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await fetchRecruiterDashboardStats();
-            setStats(data);
-        } catch (e) {
-            setError(
-                e instanceof Error ? e.message : "Failed to load dashboard"
-            );
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        void load();
-    }, [load]);
+        let ignore = false;
+        fetchRecruiterDashboardStats()
+            .then((data) => {
+                if (!ignore) {
+                    setStats(data);
+                    setError(null);
+                    setLoading(false);
+                }
+            })
+            .catch((e) => {
+                if (!ignore) {
+                    setError(
+                        e instanceof Error ? e.message : "Failed to load dashboard"
+                    );
+                    setLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [reloadKey]);
+
+    const reload = () => {
+        setLoading(true);
+        setReloadKey((k) => k + 1);
+    };
 
     const scopeHint =
         user?.role === "HR_MANAGER"
@@ -77,7 +87,7 @@ export default function DashboardPage() {
             <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-destructive">
                 <p className="font-semibold text-sm">Dashboard metrics unavailable</p>
                 <p className="mt-1 text-xs opacity-90">{error}</p>
-                <Button variant="outline" size="sm" onClick={() => void load()} className="mt-4">
+                <Button variant="outline" size="sm" onClick={reload} className="mt-4">
                     Retry connection
                 </Button>
             </div>

@@ -11,13 +11,13 @@ public interface AdminDashboardService {
      * @return admin analytics data
      */
     AdminAnalyticsDTO getAnalytics(String period);
-    
+
     /**
      * Get system health status
      * @return system health data
      */
     SystemHealthDTO getSystemHealth();
-    
+
     /**
      * Get user management statistics
      * @return user management stats

@@ -31,37 +31,42 @@ const STATUS_STYLES: Record<OnboardingStatus, string> = {
 export default function OnboardingPage() {
   const { id, applicationId } = useParams<{ id: string; applicationId: string }>();
   const [checklist, setChecklist] = useState<OnboardingChecklist | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(id || applicationId));
   const [error, setError] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
 
-  const loadChecklist = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      if (id) {
-        const data = await onboardingService.getById(id);
-        setChecklist(data);
-      } else if (applicationId) {
-        const data = await onboardingService.getByApplicationId(applicationId);
-        setChecklist(data);
-      } else {
-        setError("No checklist ID or application ID provided.");
-      }
-    } catch {
-      setChecklist(null);
-      if (applicationId) {
-        setCreateOpen(true);
-      } else {
-        setError("Onboarding checklist not found.");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    void loadChecklist();
+    if (!id && !applicationId) {
+      return;
+    }
+    let ignore = false;
+    const fetchChecklist = id
+      ? onboardingService.getById(id)
+      : onboardingService.getByApplicationId(applicationId!);
+
+    fetchChecklist
+      .then((data) => {
+        if (!ignore) {
+          setChecklist(data);
+          setError("");
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setChecklist(null);
+          if (applicationId) {
+            setCreateOpen(true);
+          } else {
+            setError("Onboarding checklist not found.");
+          }
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, [id, applicationId]);
 
   const handleToggle = async (taskId: string) => {
@@ -94,8 +99,11 @@ export default function OnboardingPage() {
     );
   }
 
-  if (error || !checklist) {
-    return <p className="py-8 text-center text-sm text-destructive">{error || "Not found."}</p>;
+  const paramError = !id && !applicationId ? "No checklist ID or application ID provided." : "";
+  const displayError = error || paramError;
+
+  if (displayError || !checklist) {
+    return <p className="py-8 text-center text-sm text-destructive">{displayError || "Not found."}</p>;
   }
 
   const progressPercent = Math.round(checklist.progressPercent);

@@ -58,7 +58,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public DepartmentResponseDTO updateDepartment(UUID id, DepartmentRequestDTO req) {
         Department dept = departmentRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Department not found", HttpStatus.NOT_FOUND));
-        
+
         if (!dept.getName().equals(req.getName()) && departmentRepository.existsByName(req.getName())) {
             throw new BusinessException("Department name already exists", HttpStatus.BAD_REQUEST);
         }

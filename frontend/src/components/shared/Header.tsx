@@ -34,6 +34,8 @@ export default function Header() {
     const { user, logout } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
+    // Reference time for "x min ago", refreshed each time the notification menu opens.
+    const [now, setNow] = useState(() => Date.now());
     const [profileOpen, setProfileOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -113,7 +115,7 @@ export default function Header() {
     };
 
     const timeAgo = (dateStr: string) => {
-        const diff = Date.now() - new Date(dateStr).getTime();
+        const diff = now - new Date(dateStr).getTime();
         const mins = Math.floor(diff / 60000);
         if (mins < 1) return "just now";
         if (mins < 60) return `${mins}m ago`;
@@ -130,7 +132,7 @@ export default function Header() {
             {user && (
                 <div className="flex items-center gap-2">
                     {/* Notification Bell */}
-                    <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>
+                    <DropdownMenu open={notifOpen} onOpenChange={(open) => { if (open) setNow(Date.now()); setNotifOpen(open); }}>
                         <DropdownMenuTrigger asChild>
                             <Button
                                 variant="ghost"

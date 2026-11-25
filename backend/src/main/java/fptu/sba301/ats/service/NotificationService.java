@@ -20,7 +20,7 @@ public interface NotificationService {
     long getUnreadCount(String email);
     void markAsRead(Long notificationId, String email);
     void markAllAsRead(String email);
-    
+
     // CRUD for admin
     Page<Notification> getAllNotifications(Pageable pageable);
     Page<fptu.sba301.ats.dto.response.NotificationResponseDTO> getAllNotificationsGrouped(Pageable pageable);

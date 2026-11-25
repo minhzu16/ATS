@@ -11,9 +11,8 @@ public interface SystemConfigService {
     void updateConfigs(Map<String, String> configs);
 
     SystemConfigResponseDTO updateConfig(String key, String value);
-    
+
     String getString(String key, String defaultValue);
     int getInt(String key, int defaultValue);
     boolean getBoolean(String key, boolean defaultValue);
 }
-

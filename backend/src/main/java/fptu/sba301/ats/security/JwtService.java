@@ -13,7 +13,6 @@ import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
 
-import static fptu.sba301.ats.constant.AuthConstants.EMAIL_KEY;
 import static fptu.sba301.ats.constant.AuthConstants.ROLE_KEY;
 
 @Service

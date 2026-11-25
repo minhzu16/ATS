@@ -55,8 +55,9 @@ export default function ProfilePage() {
         try {
             const data = await userService.uploadAvatar(file);
             updateUser({ avatarUrl: data.avatarUrl });
-        } catch (err: any) {
-            setError(err.response?.data?.message || "Failed to upload avatar. Please try again.");
+        } catch (err) {
+            const message = err instanceof Error ? err.message : "Failed to upload avatar. Please try again.";
+            setError(message);
         } finally {
             setUploading(false);
         }

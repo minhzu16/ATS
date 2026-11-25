@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Users, Calendar, Award, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -121,7 +121,13 @@ export default function CandidateEvaluationPage() {
   );
 }
 
-function Badge({ children, className }: any) {
+interface BadgeProps {
+  children: ReactNode;
+  className?: string;
+  variant?: string;
+}
+
+function Badge({ children, className }: BadgeProps) {
   return (
     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>
       {children}

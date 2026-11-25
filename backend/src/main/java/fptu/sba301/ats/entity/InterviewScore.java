@@ -1,7 +1,4 @@
 package fptu.sba301.ats.entity;
-import fptu.sba301.ats.entity.BaseEntity;
-import fptu.sba301.ats.entity.Interview;
-import fptu.sba301.ats.entity.ScorecardCriterion;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,7 +27,7 @@ public class InterviewScore extends BaseEntity {
     @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_id", nullable = false)
     private Interview interview;
@@ -38,7 +35,7 @@ public class InterviewScore extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User interviewer;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "criterion_id", nullable = false)
     private ScorecardCriterion criterion;

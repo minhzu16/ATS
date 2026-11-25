@@ -10,6 +10,7 @@ import type {
   ScorecardTemplate,
   CreateScorecardTemplateRequest,
   CriterionRequest,
+  ScorecardCriterion,
 } from "@/types/scorecard";
 
 export default function ScorecardTemplatesPage() {
@@ -19,23 +20,33 @@ export default function ScorecardTemplatesPage() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<ScorecardTemplate | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const loadTemplates = async () => {
+  const reload = () => {
     setLoading(true);
-    setError("");
-    try {
-      const data = await scorecardService.getAll();
-      setTemplates(data);
-    } catch {
-      setError("Failed to load templates.");
-    } finally {
-      setLoading(false);
-    }
+    setReloadKey((k) => k + 1);
   };
 
   useEffect(() => {
-    void loadTemplates();
-  }, []);
+    let ignore = false;
+    scorecardService.getAll()
+      .then((data) => {
+        if (!ignore) {
+          setTemplates(data);
+          setError("");
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("Failed to load templates.");
+          setLoading(false);
+        }
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -51,7 +62,7 @@ export default function ScorecardTemplatesPage() {
     if (!confirm("Are you sure you want to delete this template?")) return;
     try {
       await scorecardService.remove(id);
-      await loadTemplates();
+      reload();
     } catch {
       alert("Failed to delete template.");
     }
@@ -182,7 +193,7 @@ export default function ScorecardTemplatesPage() {
           onClose={() => setDialogOpen(false)}
           onSaved={() => {
             setDialogOpen(false);
-            void loadTemplates();
+            reload();
           }}
         />
       )}
@@ -205,7 +216,7 @@ function TemplateDialog({
   const [name, setName] = useState(template?.name ?? "");
   const [departmentId, setDepartmentId] = useState(template?.departmentId ?? "");
   const [criteria, setCriteria] = useState<CriterionRequest[]>(
-    template?.criteria.map((c: any) => ({ name: c.name, weight: c.weight })) ?? [
+    template?.criteria.map((c: ScorecardCriterion) => ({ name: c.name, weight: c.weight })) ?? [
       { name: "", weight: 1 },
     ],
   );

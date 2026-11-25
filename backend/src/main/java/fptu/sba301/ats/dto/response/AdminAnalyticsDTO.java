@@ -13,17 +13,17 @@ public class AdminAnalyticsDTO {
     private long newApplicationsThisMonth;
     private double conversionRate;
     private double timeToHireAverage;
-    
+
     private Map<String, Long> hiringFunnel; // APPLIED, SCREENING, INTERVIEW, OFFER, HIRED
-    
+
     private Map<String, Long> applicationsByDepartment;
-    
+
     private List<JobPerformanceDTO> topJobs;
-    
+
     private Map<String, Long> applicationsBySource;
-    
+
     private Map<String, Long> rejectionReasons;
-    
+
     private String period; // "7days", "30days", "quarter"
 
     @Data

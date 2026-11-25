@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Eye, EyeOff, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -31,11 +31,7 @@ export default function ResetPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
-    const [tokenMissing, setTokenMissing] = useState(false);
-
-    useEffect(() => {
-        if (!token) setTokenMissing(true);
-    }, [token]);
+    const tokenMissing = !token;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

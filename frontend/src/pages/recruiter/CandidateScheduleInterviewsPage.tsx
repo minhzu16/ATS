@@ -43,35 +43,34 @@ export default function CandidateScheduleInterviewsPage() {
   const [candidate, setCandidate] = useState<CandidateDetailItem | null>(null);
   const [interviewers, setInterviewers] = useState<InterviewerOptionItem[]>([]);
   const [slots, setSlots] = useState<InterviewSlotForm[]>([createEmptySlot()]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(candidateId));
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(candidateId ? "" : "Invalid candidate id.");
 
   useEffect(() => {
-    if (!candidateId) {
-      setError("Invalid candidate id.");
-      setLoading(false);
-      return;
-    }
-
-    const loadData = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const [candidateDetail, interviewerOptions] = await Promise.all([
-          candidateService.getCandidateDetail(candidateId),
-          candidateService.getInterviewerOptions(),
-        ]);
-        setCandidate(candidateDetail);
-        setInterviewers(interviewerOptions);
-      } catch {
-        setError("Failed to load scheduling data.");
-      } finally {
-        setLoading(false);
-      }
+    if (!candidateId) return;
+    let ignore = false;
+    Promise.all([
+      candidateService.getCandidateDetail(candidateId),
+      candidateService.getInterviewerOptions(),
+    ])
+      .then(([candidateDetail, interviewerOptions]) => {
+        if (!ignore) {
+          setCandidate(candidateDetail);
+          setInterviewers(interviewerOptions);
+          setError("");
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("Failed to load scheduling data.");
+          setLoading(false);
+        }
+      });
+    return () => {
+      ignore = true;
     };
-
-    void loadData();
   }, [candidateId]);
 
   const canSubmit = useMemo(() => !loading && !submitting && !!candidateId && interviewers.length > 0, [loading, submitting, candidateId, interviewers.length]);

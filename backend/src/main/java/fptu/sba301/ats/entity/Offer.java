@@ -53,4 +53,3 @@ public class Offer extends BaseEntity {
     private Long version;
 
 }
-

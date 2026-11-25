@@ -28,19 +28,19 @@ public class InterviewDetailResponse {
 
     private UUID applicationId;
     private UUID templateId;
-    
+
     // Candidate Details
     private UUID candidateId;
     private String candidateName;
     private String candidateEmail;
     private String candidatePhone;
     private String candidateResumeUrl;
-    
+
     // Job Details
     private UUID jobId;
     private String jobTitle;
     private String jobDepartment;
-    
+
     // Participants
     private List<ParticipantResponse> participants;
 }

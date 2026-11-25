@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
     Bell, CheckCheck, RefreshCw, Clock, Inbox, Info, AlertTriangle, CheckCircle2, MoreVertical, Database
 } from "lucide-react";
@@ -44,6 +44,7 @@ export default function NotificationPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [reloadKey, setReloadKey] = useState(0);
 
     // Form state
     const [title, setTitle] = useState("");
@@ -54,33 +55,43 @@ export default function NotificationPage() {
 
     const [activeTab, setActiveTab] = useState<"personal" | "system">("personal");
 
-    const loadNotifications = useCallback(async (p: number, tab?: "personal" | "system") => {
-        const currentTab = tab || activeTab;
-        setIsLoading(true);
-        try {
-            const data = currentTab === "personal" 
-                ? await adminService.getNotifications(p, pageSize)
-                : await adminService.getAllNotificationsAdmin(p, pageSize);
-            setNotifications(data.content);
-            setTotalElements(data.totalElements);
-            setTotalPages(data.totalPages);
-            setPage(data.number);
-        } catch {
-            // Silently fail
-        } finally {
-            setIsLoading(false);
-        }
-    }, [pageSize, activeTab]);
+    useEffect(() => {
+        let ignore = false;
+        const fetchPromise = activeTab === "personal" 
+            ? adminService.getNotifications(page, pageSize)
+            : adminService.getAllNotificationsAdmin(page, pageSize);
 
-    const handleTabChange = (tab: "personal" | "system") => {
-        setActiveTab(tab);
-        setPage(0);
-        loadNotifications(0, tab);
+        fetchPromise
+            .then((data) => {
+                if (!ignore) {
+                    setNotifications(data.content);
+                    setTotalElements(data.totalElements);
+                    setTotalPages(data.totalPages);
+                    setPage(data.number);
+                    setIsLoading(false);
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setIsLoading(false);
+                }
+            });
+
+        return () => {
+            ignore = true;
+        };
+    }, [page, pageSize, activeTab, reloadKey]);
+
+    const reload = () => {
+        setIsLoading(true);
+        setReloadKey((k) => k + 1);
     };
 
-    useEffect(() => {
-        loadNotifications(page);
-    }, [loadNotifications, page]);
+    const handleTabChange = (tab: "personal" | "system") => {
+        setIsLoading(true);
+        setActiveTab(tab);
+        setPage(0);
+    };
 
     const handleMarkAsRead = async (id: string) => {
         try {
@@ -139,7 +150,7 @@ export default function NotificationPage() {
             setIsDialogOpen(false);
             setTitle("");
             setMessage("");
-            loadNotifications(page);
+            reload();
         } catch (error) {
             console.error("Failed to send notification", error);
             toast.error("Failed to send notification");
@@ -193,7 +204,11 @@ export default function NotificationPage() {
                                     <Label htmlFor="target">Recipient Target</Label>
                                     <Select 
                                         value={targetType} 
-                                        onValueChange={(v: any) => setTargetType(v)}
+                                        onValueChange={(v: unknown) => {
+                                            if (v === "broadcast" || v === "role") {
+                                                setTargetType(v);
+                                            }
+                                        }}
                                     >
                                         <SelectTrigger className="rounded-xl border-primary/20 bg-background/50">
                                             <SelectValue placeholder="Select target" />
@@ -278,7 +293,7 @@ export default function NotificationPage() {
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
-                    <Button variant="outline" size="sm" onClick={() => loadNotifications(page)} disabled={isLoading} className="rounded-full">
+                    <Button variant="outline" size="sm" onClick={reload} disabled={isLoading} className="rounded-full">
                         <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                         Refresh
                     </Button>
@@ -338,7 +353,7 @@ export default function NotificationPage() {
                             <p className="text-sm opacity-30 mt-1 uppercase tracking-tighter font-mono">
                                 No new alerts found
                             </p>
-                            <Button variant="ghost" className="mt-6 rounded-full opacity-40 hover:opacity-100" onClick={() => loadNotifications(page)}>
+                            <Button variant="ghost" className="mt-6 rounded-full opacity-40 hover:opacity-100" onClick={reload}>
                                 <RefreshCw className="mr-2 h-4 w-4" /> Check again
                             </Button>
                         </div>
@@ -405,7 +420,10 @@ export default function NotificationPage() {
                         totalPages={totalPages} 
                         totalElements={totalElements} 
                         pageSize={pageSize} 
-                        onPageChange={setPage}
+                        onPageChange={(p) => {
+                            setIsLoading(true);
+                            setPage(p);
+                        }}
                     />
                 </div>
             </div>

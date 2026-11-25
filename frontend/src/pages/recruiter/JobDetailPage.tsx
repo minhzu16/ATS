@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import type { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
@@ -12,39 +12,38 @@ export default function JobDetailPage() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [job, setJob] = useState<JobDetailResponse | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    const load = useCallback(async () => {
-        if (!id) {
-            setLoading(false);
-            setError("Invalid job ID.");
-            return;
-        }
-
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await getJobDetail(id);
-            setJob(data);
-        } catch (e) {
-            const ax = e as AxiosError<{ message?: string }>;
-            if (ax.response?.status === 403) {
-                setError("You do not have permission to view this job.");
-            } else if (ax.response?.status === 404) {
-                setError("Job not found.");
-            } else {
-                setError("Failed to load job detail. Please try again.");
-            }
-            setJob(null);
-        } finally {
-            setLoading(false);
-        }
-    }, [id]);
+    const [loading, setLoading] = useState(Boolean(id));
+    const [error, setError] = useState<string | null>(id ? null : "Invalid job ID.");
 
     useEffect(() => {
-        void load();
-    }, [load]);
+        if (!id) return;
+        let ignore = false;
+        getJobDetail(id)
+            .then((data) => {
+                if (!ignore) {
+                    setJob(data);
+                    setError(null);
+                    setLoading(false);
+                }
+            })
+            .catch((e) => {
+                if (!ignore) {
+                    const ax = e as AxiosError<{ message?: string }>;
+                    if (ax.response?.status === 403) {
+                        setError("You do not have permission to view this job.");
+                    } else if (ax.response?.status === 404) {
+                        setError("Job not found.");
+                    } else {
+                        setError("Failed to load job detail. Please try again.");
+                    }
+                    setJob(null);
+                    setLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [id]);
 
     if (loading) {
         return (

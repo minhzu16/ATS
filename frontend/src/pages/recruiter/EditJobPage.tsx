@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { AxiosError } from "axios";
 import { AlertCircle } from "lucide-react";
@@ -15,43 +15,43 @@ export default function EditJobPage() {
     const [description, setDescription] = useState("");
     const [headcount, setHeadcount] = useState<number>(1);
     const [departmentName, setDepartmentName] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(Boolean(id));
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(id ? null : "Invalid job ID.");
     const [dirty, setDirty] = useState(false);
 
-    const load = useCallback(async () => {
-        if (!id) {
-            setLoading(false);
-            setError("Invalid job ID.");
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const job = await getJobForEdit(id);
-            setTitle(job.title);
-            setDescription(job.description ?? "");
-            setHeadcount(job.headcount ?? 1);
-            setDepartmentName(job.departmentName);
-            setDirty(false);
-        } catch (e) {
-            const ax = e as AxiosError<{ message?: string }>;
-            if (ax.response?.status === 403) {
-                setError("You do not have permission to edit this job.");
-            } else if (ax.response?.status === 404) {
-                setError("Job not found.");
-            } else {
-                setError("Failed to load job for editing.");
-            }
-        } finally {
-            setLoading(false);
-        }
-    }, [id]);
-
     useEffect(() => {
-        void load();
-    }, [load]);
+        if (!id) return;
+        let ignore = false;
+        getJobForEdit(id)
+            .then((job) => {
+                if (!ignore) {
+                    setTitle(job.title);
+                    setDescription(job.description ?? "");
+                    setHeadcount(job.headcount ?? 1);
+                    setDepartmentName(job.departmentName);
+                    setDirty(false);
+                    setError(null);
+                    setLoading(false);
+                }
+            })
+            .catch((e) => {
+                if (!ignore) {
+                    const ax = e as AxiosError<{ message?: string }>;
+                    if (ax.response?.status === 403) {
+                        setError("You do not have permission to edit this job.");
+                    } else if (ax.response?.status === 404) {
+                        setError("Job not found.");
+                    } else {
+                        setError("Failed to load job for editing.");
+                    }
+                    setLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [id]);
 
     const markDirty = () => setDirty(true);
 

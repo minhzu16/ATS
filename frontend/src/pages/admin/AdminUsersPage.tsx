@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Search, Plus, Shield, Lock, Unlock, Trash2, Pencil,
@@ -57,6 +57,7 @@ export default function AdminUsersPage() {
     const navigate = useNavigate();
     const [users, setUsers] = useState<UserRecord[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [reloadKey, setReloadKey] = useState(0);
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState<UserRole | "">("");
@@ -74,30 +75,39 @@ export default function AdminUsersPage() {
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
     const [isExporting, setIsExporting] = useState(false);
 
-    const loadUsers = useCallback(async () => {
+    useEffect(() => {
+        let ignore = false;
+        userService.getUsers(page, size, departmentFilter || undefined)
+            .then((data) => {
+                if (!ignore) {
+                    setUsers(data.content);
+                    setTotalPages(data.totalPages);
+                    setTotalElements(data.totalElements);
+                    setError("");
+                    setIsLoading(false);
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setError("Failed to load users. Please try again.");
+                    setIsLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [page, size, departmentFilter, reloadKey]);
+
+    const reload = () => {
         setIsLoading(true);
-        setError("");
-        try {
-            const data = await userService.getUsers(page, size, departmentFilter || undefined);
-            setUsers(data.content);
-            setTotalPages(data.totalPages);
-            setTotalElements(data.totalElements);
-        } catch {
-            setError("Failed to load users. Please try again.");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [page, size, departmentFilter]);
+        setReloadKey((k) => k + 1);
+    };
 
     useEffect(() => {
         adminService.getDepartments(0, 100)
             .then((data) => setDepartments(data.content))
             .catch(() => {});
     }, []);
-
-    useEffect(() => {
-        loadUsers();
-    }, [loadUsers]);
 
     const handleLockToggle = async (user: UserRecord) => {
         setActionLoading(user.id);
@@ -195,7 +205,7 @@ export default function AdminUsersPage() {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Button variant="outline" size="sm" onClick={loadUsers} disabled={isLoading}>
+                    <Button variant="outline" size="sm" onClick={reload} disabled={isLoading}>
                         <RefreshCw className={`mr-1.5 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                         Refresh
                     </Button>
@@ -241,6 +251,7 @@ export default function AdminUsersPage() {
                     className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                     value={departmentFilter}
                     onChange={(e) => {
+                        setIsLoading(true);
                         setDepartmentFilter(e.target.value);
                         setPage(0); // reset to first page on filter
                     }}
@@ -419,7 +430,10 @@ export default function AdminUsersPage() {
                             variant="outline"
                             size="sm"
                             disabled={page === 0}
-                            onClick={() => setPage((p) => Math.max(0, p - 1))}
+                            onClick={() => {
+                                setIsLoading(true);
+                                setPage((p) => Math.max(0, p - 1));
+                            }}
                         >
                             <ChevronLeft className="h-4 w-4" />
                             Previous
@@ -431,7 +445,10 @@ export default function AdminUsersPage() {
                             variant="outline"
                             size="sm"
                             disabled={page >= totalPages - 1}
-                            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                            onClick={() => {
+                                setIsLoading(true);
+                                setPage((p) => Math.min(totalPages - 1, p + 1));
+                            }}
                         >
                             Next
                             <ChevronRight className="h-4 w-4" />

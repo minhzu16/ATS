@@ -24,7 +24,7 @@ public class AuditLogController {
     public ResponseEntity<Page<AuditLogResponseDTO>> getAllLogs(Pageable pageable) {
         return ResponseEntity.ok(auditLogService.getAllLogs(pageable));
     }
-    
+
     @GetMapping("/action")
     public ResponseEntity<Page<AuditLogResponseDTO>> getLogsByAction(@RequestParam String action, Pageable pageable) {
         return ResponseEntity.ok(auditLogService.getLogsByAction(action, pageable));

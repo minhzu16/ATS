@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
     Search, Plus, Building2, Pencil, Trash2, RefreshCw, Users, Briefcase, Info, X, Check
 } from "lucide-react";
@@ -25,6 +25,7 @@ export default function DepartmentsPage() {
     const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [reloadKey, setReloadKey] = useState(0);
     const [isSaving, setIsSaving] = useState(false);
     const [search, setSearch] = useState("");
     
@@ -33,24 +34,31 @@ export default function DepartmentsPage() {
     const [editingDept, setEditingDept] = useState<Department | null>(null);
     const [formData, setFormData] = useState({ name: "", description: "" });
 
-    const loadDepartments = useCallback(async (p: number) => {
-        setIsLoading(true);
-        try {
-            const data = await adminService.getDepartments(p, pageSize);
-            setDepartments(data.content);
-            setTotalElements(data.totalElements);
-            setTotalPages(data.totalPages);
-            setPage(data.number);
-        } catch {
-            // Silently fail
-        } finally {
-            setIsLoading(false);
-        }
-    }, [pageSize]);
-
     useEffect(() => {
-        loadDepartments(page);
-    }, [loadDepartments, page]);
+        let ignore = false;
+        adminService.getDepartments(page, pageSize)
+            .then((data) => {
+                if (!ignore) {
+                    setDepartments(data.content);
+                    setTotalElements(data.totalElements);
+                    setTotalPages(data.totalPages);
+                    setIsLoading(false);
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setIsLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [page, pageSize, reloadKey]);
+
+    const reload = () => {
+        setIsLoading(true);
+        setReloadKey((k) => k + 1);
+    };
 
     const handleOpenModal = (dept: Department | null = null) => {
         if (dept) {
@@ -75,7 +83,7 @@ export default function DepartmentsPage() {
                 await adminService.createDepartment(formData);
             }
             setIsModalOpen(false);
-            loadDepartments(page);
+            reload();
         } catch (error) {
             console.error("Failed to save department", error);
         } finally {
@@ -88,7 +96,7 @@ export default function DepartmentsPage() {
         
         try {
             await adminService.deleteDepartment(id);
-            loadDepartments(page);
+            reload();
         } catch (error) {
             console.error("Failed to delete department", error);
         }
@@ -115,7 +123,7 @@ export default function DepartmentsPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => loadDepartments(page)} disabled={isLoading} className="rounded-full">
+                    <Button variant="outline" size="sm" onClick={reload} disabled={isLoading} className="rounded-full">
                         <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                         Refresh
                     </Button>
@@ -217,7 +225,10 @@ export default function DepartmentsPage() {
                     totalPages={totalPages} 
                     totalElements={totalElements} 
                     pageSize={pageSize} 
-                    onPageChange={setPage}
+                    onPageChange={(p) => {
+                        setIsLoading(true);
+                        setPage(p);
+                    }}
                 />
             </div>
 

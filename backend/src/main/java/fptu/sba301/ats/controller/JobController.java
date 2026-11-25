@@ -3,8 +3,6 @@ package fptu.sba301.ats.controller;
 import fptu.sba301.ats.dto.request.JobCreateRequest;
 import fptu.sba301.ats.dto.response.JobResponse;
 import fptu.sba301.ats.entity.User;
-import fptu.sba301.ats.exception.BusinessException;
-import fptu.sba301.ats.repository.UserRepository;
 import fptu.sba301.ats.service.JobCommandService;
 import fptu.sba301.ats.service.JobService;
 import jakarta.validation.Valid;

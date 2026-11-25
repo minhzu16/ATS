@@ -133,3 +133,36 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
+
+/* Light Frosted Glass tokens & utilities */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-dense: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(226, 232, 240, 0.75);
+  --glass-shadow: 0 8px 32px -4px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --glass-blur: 12px;
+}
+
+.dark {
+  --glass-bg: rgba(15, 23, 42, 0.68);
+  --glass-bg-dense: rgba(15, 23, 42, 0.86);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --glass-blur: 12px;
+}
+
+.glass-panel {
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.glass-panel-dense {
+  background-color: var(--glass-bg-dense);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}

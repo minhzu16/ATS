@@ -1,14 +1,12 @@
 import {
-    createContext,
     useState,
     useEffect,
     useCallback,
     type ReactNode,
 } from "react";
-import type { AuthContextType, LoginCredentials, User } from "@/types/auth";
+import type { LoginCredentials, User } from "@/types/auth";
 import { authService } from "@/services/authService";
-
-export const AuthContext = createContext<AuthContextType | null>(null);
+import { AuthContext } from "./auth-context";
 
 // Tokens can be in either localStorage (remember me) or sessionStorage (session only)
 function getStoredItem(key: string): string | null {
@@ -26,6 +24,7 @@ function clearSession() {
 
 function buildUserFromStorage(): User | null {
     try {
+        if (!getStoredItem("accessToken")) return null;
         const raw = getStoredItem("user");
         if (!raw) return null;
         const parsed = JSON.parse(raw) as
@@ -66,7 +65,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = buildUserFromStorage();
         if (!accessToken || !storedUser) {
             clearSession();
-            setUser(null);
         }
     }, []);
 

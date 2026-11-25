@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
     Settings, Save, RefreshCw, AlertTriangle, Key
 } from "lucide-react";
@@ -16,31 +16,41 @@ export default function SystemConfigPage() {
     const [totalPages, setTotalPages] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState<string | null>(null);
-
-    const loadConfigs = useCallback(async (p: number) => {
-        setIsLoading(true);
-        try {
-            const data = await adminService.getConfigs(p, pageSize);
-            setConfigs(data.content);
-            setTotalElements(data.totalElements);
-            setTotalPages(data.totalPages);
-            setPage(data.number);
-        } catch {
-            // Silently handle error
-        } finally {
-            setIsLoading(false);
-        }
-    }, [pageSize]);
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        loadConfigs(page);
-    }, [loadConfigs, page]);
+        let ignore = false;
+        adminService.getConfigs(page, pageSize)
+            .then((data) => {
+                if (!ignore) {
+                    setConfigs(data.content);
+                    setTotalElements(data.totalElements);
+                    setTotalPages(data.totalPages);
+                    setPage(data.number);
+                    setIsLoading(false);
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setIsLoading(false);
+                }
+            });
+
+        return () => {
+            ignore = true;
+        };
+    }, [page, pageSize, reloadKey]);
+
+    const reload = () => {
+        setIsLoading(true);
+        setReloadKey((k) => k + 1);
+    };
 
     const handleSave = async (key: string, value: string) => {
         setIsSaving(key);
         try {
             await adminService.updateConfig({ configKey: key, value });
-            await loadConfigs(page);
+            reload();
         } catch {
             // Silently handle error
         } finally {
@@ -61,7 +71,7 @@ export default function SystemConfigPage() {
                         <p className="text-sm text-muted-foreground">Adjust system-wide settings and parameters</p>
                     </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => loadConfigs(page)} disabled={isLoading} className="rounded-full bg-background/50">
+                <Button variant="outline" size="sm" onClick={reload} disabled={isLoading} className="rounded-full bg-background/50">
                     <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                     Refresh
                 </Button>
@@ -129,7 +139,10 @@ export default function SystemConfigPage() {
                         totalPages={totalPages} 
                         totalElements={totalElements} 
                         pageSize={pageSize} 
-                        onPageChange={setPage}
+                        onPageChange={(p) => {
+                            setIsLoading(true);
+                            setPage(p);
+                        }}
                     />
                 </div>
             </div>

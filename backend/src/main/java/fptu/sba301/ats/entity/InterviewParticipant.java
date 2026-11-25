@@ -33,10 +33,10 @@ public class InterviewParticipant {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private ParticipantRole role;
-    
+
     @Column(name = "feedback", columnDefinition = "TEXT")
     private String feedback;
-    
+
     @Column(name = "overall_score")
     private BigDecimal overallScore;
 

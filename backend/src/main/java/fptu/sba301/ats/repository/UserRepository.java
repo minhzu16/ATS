@@ -30,4 +30,3 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     long countByRoleAndDeletedFalse(fptu.sba301.ats.enums.Role role);
     long countByAccountLockedTrueAndDeletedFalse();
 }
-

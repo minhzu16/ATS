@@ -2,11 +2,8 @@ package fptu.sba301.ats.controller;
 
 import fptu.sba301.ats.dto.response.JobPageResponse;
 import fptu.sba301.ats.entity.User;
-import fptu.sba301.ats.exception.BusinessException;
-import fptu.sba301.ats.repository.UserRepository;
 import fptu.sba301.ats.service.JobListService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;

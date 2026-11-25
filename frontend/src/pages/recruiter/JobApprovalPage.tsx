@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,36 +20,46 @@ export default function JobApprovalPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [actionId, setActionId] = useState<string | null>(null);
-
-    const load = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await getPendingJobs();
-            setJobs(data);
-        } catch (e) {
-            const ax = e as AxiosError<{ message?: string }>;
-            if (ax.response?.status === 403) {
-                setError("You do not have permission to view pending jobs.");
-            } else {
-                setError("Failed to load pending jobs.");
-            }
-            setJobs([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const [reloadKey, setReloadKey] = useState(0);
 
     useEffect(() => {
-        void load();
-    }, [load]);
+        let ignore = false;
+        getPendingJobs()
+            .then((data) => {
+                if (!ignore) {
+                    setJobs(data);
+                    setError(null);
+                    setLoading(false);
+                }
+            })
+            .catch((e) => {
+                if (!ignore) {
+                    const ax = e as AxiosError<{ message?: string }>;
+                    if (ax.response?.status === 403) {
+                        setError("You do not have permission to view pending jobs.");
+                    } else {
+                        setError("Failed to load pending jobs.");
+                    }
+                    setJobs([]);
+                    setLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [reloadKey]);
+
+    const reload = () => {
+        setLoading(true);
+        setReloadKey((k) => k + 1);
+    };
 
     const handleApprove = async (jobId: string) => {
         setActionId(jobId);
         setError(null);
         try {
             await approveJob(jobId);
-            await load();
+            reload();
         } catch {
             setError("Could not approve this job. It may have been updated.");
         } finally {
@@ -62,7 +72,7 @@ export default function JobApprovalPage() {
         setError(null);
         try {
             await rejectJob(jobId);
-            await load();
+            reload();
         } catch {
             setError("Could not reject this job. It may have been updated.");
         } finally {

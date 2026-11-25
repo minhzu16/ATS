@@ -59,19 +59,25 @@ export default function InterviewCalendarPage() {
   const navigate = useNavigate();
   const showScheduleButton = user?.role !== "INTERVIEWER";
 
-  const fetchInterviews = async () => {
-    try {
-      const data = await interviewService.getAllInterviews();
-      setInterviews(data);
-    } catch (error) {
-      console.error("Failed to fetch interviews", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchInterviews();
+    let ignore = false;
+    interviewService.getAllInterviews()
+      .then((data) => {
+        if (!ignore) {
+          setInterviews(data);
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        if (!ignore) {
+          console.error("Failed to fetch interviews", error);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const handlePrevWeek = () => setCurrentWeekStart(addDays(currentWeekStart, -7));

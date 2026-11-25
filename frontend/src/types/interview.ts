@@ -88,5 +88,5 @@ export interface CandidateEvaluationResponse {
   candidateName: string;
   overallScore: number;
   recommendation: string;
-  interviewerFeedbacks: any[];
+  interviewerFeedbacks: unknown[];
 }

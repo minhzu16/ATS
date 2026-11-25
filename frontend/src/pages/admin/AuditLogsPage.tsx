@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
     Activity, Search, RefreshCw, Clock, ChevronRight, Download, FileSpreadsheet, FileText
 } from "lucide-react";
@@ -27,28 +27,36 @@ export default function AuditLogsPage() {
     const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [reloadKey, setReloadKey] = useState(0);
     const [search, setSearch] = useState("");
     const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
     const [isExporting, setIsExporting] = useState(false);
 
-    const loadLogs = useCallback(async (p: number) => {
-        setIsLoading(true);
-        try {
-            const data = await adminService.getAuditLogs(p, pageSize);
-            setLogs(data.content);
-            setTotalElements(data.totalElements);
-            setTotalPages(data.totalPages);
-            setPage(data.number);
-        } catch {
-            // Silently handle error
-        } finally {
-            setIsLoading(false);
-        }
-    }, [pageSize]);
-
     useEffect(() => {
-        loadLogs(page);
-    }, [loadLogs, page]);
+        let ignore = false;
+        adminService.getAuditLogs(page, pageSize)
+            .then((data) => {
+                if (!ignore) {
+                    setLogs(data.content);
+                    setTotalElements(data.totalElements);
+                    setTotalPages(data.totalPages);
+                    setIsLoading(false);
+                }
+            })
+            .catch(() => {
+                if (!ignore) {
+                    setIsLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [page, pageSize, reloadKey]);
+
+    const reload = () => {
+        setIsLoading(true);
+        setReloadKey((k) => k + 1);
+    };
 
     const filtered = logs.filter((log) =>
         log.action.toLowerCase().includes(search.toLowerCase()) ||
@@ -109,7 +117,7 @@ export default function AuditLogsPage() {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    <Button variant="outline" size="sm" onClick={() => loadLogs(page)} disabled={isLoading} className="rounded-full">
+                    <Button variant="outline" size="sm" onClick={reload} disabled={isLoading} className="rounded-full">
                         <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
                         Refresh
                     </Button>
@@ -199,7 +207,10 @@ export default function AuditLogsPage() {
                     totalPages={totalPages} 
                     totalElements={totalElements} 
                     pageSize={pageSize} 
-                    onPageChange={setPage}
+                    onPageChange={(p) => {
+                        setIsLoading(true);
+                        setPage(p);
+                    }}
                 />
             </div>
             

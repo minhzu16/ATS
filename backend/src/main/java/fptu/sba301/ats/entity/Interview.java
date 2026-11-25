@@ -1,8 +1,4 @@
 package fptu.sba301.ats.entity;
-import fptu.sba301.ats.entity.Application;
-import fptu.sba301.ats.entity.BaseEntity;
-import fptu.sba301.ats.entity.InterviewParticipant;
-import fptu.sba301.ats.entity.InterviewScore;
 import fptu.sba301.ats.enums.InterviewStatus;
 import fptu.sba301.ats.enums.InterviewType;
 import jakarta.persistence.*;
@@ -50,11 +46,11 @@ public class Interview extends BaseEntity {
     private Integer durationMinutes;
 
     @Column(name = "started_at")
-    private Instant startedAt; 
+    private Instant startedAt;
 
     @Column(name = "ended_at")
-    private Instant endedAt; 
-    
+    private Instant endedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "type")
     private InterviewType type;
@@ -68,7 +64,7 @@ public class Interview extends BaseEntity {
     @OneToMany(mappedBy = "interview", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewParticipant> participants;
 
-    
+
     @OneToMany(mappedBy = "interview", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<InterviewScore> scores;
 }

@@ -23,4 +23,3 @@ public interface OnboardingChecklistRepository extends JpaRepository<OnboardingC
            "WHERE o.id = :id")
     Optional<OnboardingChecklist> findByIdWithDetails(@Param("id") UUID id);
 }
-

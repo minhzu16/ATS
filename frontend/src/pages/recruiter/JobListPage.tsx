@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,61 +16,56 @@ export default function JobListPage() {
     const [jobs, setJobs] = useState<JobListItem[]>([]);
     const [page, setPage] = useState(0);
     const [size, setSize] = useState<number>(20);
-    const [keywordInput, setKeywordInput] = useState("");
-    const [keyword, setKeyword] = useState("");
-    const keywordDebounceBoot = useRef(true);
+    const initialKeyword = "";
+    const [keywordInput, setKeywordInput] = useState(initialKeyword);
+    const [keyword, setKeyword] = useState(initialKeyword);
     const [totalElements, setTotalElements] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (keywordDebounceBoot.current) {
-            keywordDebounceBoot.current = false;
-            setKeyword(keywordInput);
-            return;
-        }
         const t = window.setTimeout(() => {
+            setLoading(true);
             setKeyword(keywordInput);
             setPage(0);
         }, 300);
         return () => window.clearTimeout(t);
     }, [keywordInput]);
 
-    const load = useCallback(async () => {
-        if (!user) {
-            setLoading(false);
-            return;
-        }
-        if (user.role === "SYSTEM_ADMIN") {
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await getJobsPage({ page, size, keyword: keyword || undefined });
-            setJobs(data.content);
-            setTotalElements(data.totalElements);
-            setTotalPages(data.totalPages);
-        } catch (e) {
-            const ax = e as AxiosError<{ message?: string }>;
-            if (ax.response?.status === 403) {
-                setError("You do not have permission to view the job list.");
-            } else {
-                setError("Failed to load jobs. Please try again.");
-            }
-            setJobs([]);
-            setTotalElements(0);
-            setTotalPages(0);
-        } finally {
-            setLoading(false);
-        }
-    }, [user, page, size, keyword]);
-
     useEffect(() => {
-        void load();
-    }, [load]);
+        if (!user || user.role === "SYSTEM_ADMIN") {
+            return;
+        }
+        let ignore = false;
+        getJobsPage({ page, size, keyword: keyword || undefined })
+            .then((data) => {
+                if (!ignore) {
+                    setJobs(data.content);
+                    setTotalElements(data.totalElements);
+                    setTotalPages(data.totalPages);
+                    setError(null);
+                    setLoading(false);
+                }
+            })
+            .catch((e) => {
+                if (!ignore) {
+                    const ax = e as AxiosError<{ message?: string }>;
+                    if (ax.response?.status === 403) {
+                        setError("You do not have permission to view the job list.");
+                    } else {
+                        setError("Failed to load jobs. Please try again.");
+                    }
+                    setJobs([]);
+                    setTotalElements(0);
+                    setTotalPages(0);
+                    setLoading(false);
+                }
+            });
+        return () => {
+            ignore = true;
+        };
+    }, [user, page, size, keyword]);
 
     const showPostJob = user?.role === "HR";
 

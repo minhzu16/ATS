@@ -59,33 +59,36 @@ export default function CandidateProfilePage() {
   const navigate = useNavigate();
 
   const [candidate, setCandidate] = useState<CandidateDetailItem | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(candidateId));
   const [error, setError] = useState("");
   const [updatingStage, setUpdatingStage] = useState(false);
 
+  const idError = !candidateId ? "Invalid candidate id." : null;
   const canTakeScreeningActions = candidate?.stage === "SCREENING";
 
   useEffect(() => {
     if (!candidateId) {
-      setError("Invalid candidate id.");
-      setLoading(false);
       return;
     }
 
-    const loadDetail = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const data = await candidateService.getCandidateDetail(candidateId);
-        setCandidate(data);
-      } catch {
-        setError("Failed to load candidate profile.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    let ignore = false;
+    candidateService.getCandidateDetail(candidateId)
+      .then((data) => {
+        if (!ignore) {
+          setCandidate(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("Failed to load candidate profile.");
+          setLoading(false);
+        }
+      });
 
-    void loadDetail();
+    return () => {
+      ignore = true;
+    };
   }, [candidateId]);
 
   const mainDocument = useMemo(() => {
@@ -125,7 +128,7 @@ export default function CandidateProfilePage() {
     return (
       <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-destructive">
         <p className="font-semibold text-sm">Candidate not found</p>
-        <p className="mt-1 text-xs opacity-90">{error || "Unable to locate candidate records."}</p>
+        <p className="mt-1 text-xs opacity-90">{idError ?? (error || "Unable to locate candidate records.")}</p>
         <Button
           variant="outline"
           size="sm"

@@ -65,4 +65,3 @@ public class OnboardingController {
         return ResponseEntity.ok(onboardingService.toggleTask(id, taskId));
     }
 }
-

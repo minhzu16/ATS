@@ -1,3 +1,6 @@
+> ⚠️ **Tài liệu do AI tạo, chưa được đo hay kiểm chứng.** Các số liệu, điểm số và benchmark dưới đây không có test
+> hay phép đo nào chứng minh. Đánh giá hiện hành: `../../scorecard_and_upgrade_plan.md` (thư mục gốc self_project).
+
 Dưới góc độ Kiến trúc sư trưởng lập kế hoạch (Master Implementation Plan - Chế độ Cao), đây là bản đánh giá toàn diện và kế hoạch nâng cấp chi tiết cho dự án **Applicant Tracking System (ATS) pj7** (Spring Boot 3.5 / Java 21 / MySQL 8.0 / React 19 / Vite 7 / TailwindCSS) — hệ thống quản lý tuyển dụng cấp doanh nghiệp đòi hỏi tính toàn vẹn dữ liệu, kiểm soát phân quyền chặt chẽ, chống gian lận phỏng vấn và bảo mật giao dịch tuyển dụng — được tích hợp tinh hoa từ bộ 12 Agent/Skill chuẩn mực từ PJ1.
 
 ---

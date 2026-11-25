@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { candidateService } from "@/services/candidateService";
 import type { CandidateListItem, CandidateStage } from "@/types/candidate";
-import { StageBadge, stageLabel } from "@/components/shared/StageBadge";
+import { StageBadge } from "@/components/shared/StageBadge";
+import { stageLabel } from "@/components/shared/stage-badge.config";
 import AddCandidateDialog from "@/components/shared/AddCandidateDialog";
 import ImportCandidatesDialog from "@/components/shared/ImportCandidatesDialog";
 
@@ -62,23 +63,34 @@ export default function CandidateListPage() {
   const [stageFilter, setStageFilter] = useState<"ALL" | CandidateStage>("ALL");
   const [addOpen, setAddOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-
-  const loadCandidates = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await candidateService.getCandidates();
-      setCandidates(data);
-    } catch {
-      setError("Failed to load candidates.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    void loadCandidates();
-  }, []);
+    let ignore = false;
+    candidateService.getCandidates()
+      .then((data) => {
+        if (!ignore) {
+          setCandidates(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("Failed to load candidates.");
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [reloadKey]);
+
+  const reload = () => {
+    setLoading(true);
+    setError("");
+    setReloadKey((k) => k + 1);
+  };
 
   const jobOptions = useMemo(() => {
     const unique = new Set(candidates.map((item) => item.jobTitle));
@@ -314,12 +326,12 @@ export default function CandidateListPage() {
       <AddCandidateDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        onSuccess={() => void loadCandidates()}
+        onSuccess={reload}
       />
       <ImportCandidatesDialog
         open={importOpen}
         onOpenChange={setImportOpen}
-        onSuccess={() => void loadCandidates()}
+        onSuccess={reload}
       />
     </div>
   );

@@ -13,7 +13,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +20,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +43,7 @@ public class ExportServiceImpl implements ExportService {
         log.info("Exporting Audit Logs to CSV");
         try (CSVWriter writer = new CSVWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
             List<AuditLog> logs = auditLogRepository.findAll();
-            
+
             // Write BOM for Excel compatibility
             outputStream.write(0xEF);
             outputStream.write(0xBB);
@@ -119,7 +117,7 @@ public class ExportServiceImpl implements ExportService {
         log.info("Exporting Users to CSV");
         try (CSVWriter writer = new CSVWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
             List<User> users = userRepository.findAll();
-            
+
             // Write BOM for Excel compatibility
             outputStream.write(0xEF);
             outputStream.write(0xBB);

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { adminService } from "@/services/adminService";
+import type { SystemConfig } from "@/types/admin";
 import {
     Briefcase,
     Calendar,
@@ -50,7 +51,7 @@ export default function Sidebar() {
     useEffect(() => {
         adminService.getConfigs(0, 100)
             .then(data => {
-                const nameConfig = data.content.find((c: any) => c.key === "APP_NAME" || c.configKey === "APP_NAME");
+                const nameConfig = data.content.find((c: SystemConfig & { key?: string }) => c.key === "APP_NAME" || c.configKey === "APP_NAME");
                 if (nameConfig?.value) {
                     setAppName(nameConfig.value);
                 }

@@ -3,7 +3,6 @@ package fptu.sba301.ats.dto.response;
 import lombok.Data;
 import lombok.Builder;
 import java.time.Instant;
-import java.util.UUID;
 
 @Data
 @Builder

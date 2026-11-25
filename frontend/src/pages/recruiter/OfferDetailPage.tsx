@@ -35,45 +35,59 @@ export default function OfferDetailPage() {
   const [approvalComment, setApprovalComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [hasOnboarding, setHasOnboarding] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const isHrManager = user?.role === "HR_MANAGER";
   const canSubmitForApproval = user?.role === "HR" || user?.role === "HR_MANAGER";
 
-  const loadOffer = async () => {
-    if (!id) return;
+  const reload = () => {
     setLoading(true);
-    try {
-      const [offerData, historyData] = await Promise.all([
-        offerService.getOffer(id),
-        offerService.getApprovalHistory(id),
-      ]);
-      setOffer(offerData);
-      setHistory(historyData);
-      if (offerData.applicationId) {
-        try {
-          await onboardingService.getByApplicationId(offerData.applicationId);
-          setHasOnboarding(true);
-        } catch {
-          setHasOnboarding(false);
-        }
-      }
-    } catch {
-      setError("Failed to load offer details.");
-    } finally {
-      setLoading(false);
-    }
+    setReloadKey((k) => k + 1);
   };
 
   useEffect(() => {
-    void loadOffer();
-  }, [id]);
+    if (!id) return;
+    let ignore = false;
+    Promise.all([
+      offerService.getOffer(id),
+      offerService.getApprovalHistory(id),
+    ])
+      .then(async ([offerData, historyData]) => {
+        let onboardingExists = false;
+        if (offerData.applicationId) {
+          try {
+            await onboardingService.getByApplicationId(offerData.applicationId);
+            onboardingExists = true;
+          } catch {
+            onboardingExists = false;
+          }
+        }
+        if (!ignore) {
+          setOffer(offerData);
+          setHistory(historyData);
+          setHasOnboarding(onboardingExists);
+          setError("");
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!ignore) {
+          setError("Failed to load offer details.");
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [id, reloadKey]);
 
   const handleSubmitForApproval = async () => {
     if (!id) return;
     setSubmitting(true);
     try {
       await offerService.submitForApproval(id);
-      await loadOffer();
+      reload();
     } catch {
       alert("Failed to submit for approval.");
     } finally {
@@ -88,7 +102,7 @@ export default function OfferDetailPage() {
       await offerService.approveOrReject(id, { status, comment: approvalComment });
       setApprovalComment("");
       toast.success(status === "APPROVED" ? "Offer approved successfully." : "Offer rejected.");
-      await loadOffer();
+      reload();
     } catch {
       toast.error("Failed to process approval.");
     } finally {

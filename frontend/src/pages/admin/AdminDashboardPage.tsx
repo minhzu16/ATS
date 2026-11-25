@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
     Users, Building2, ShieldCheck, Mail, Activity,
     TrendingUp, CheckCircle2, Database, Download, RefreshCw
@@ -18,28 +18,27 @@ export default function AdminDashboardPage() {
     });
     const [isExporting, setIsExporting] = useState(false);
 
-    const loadStats = useCallback(async () => {
-        try {
-            const [users, depts, logs, unreadRes] = await Promise.all([
-                userService.getUsers(),
-                adminService.getDepartments(),
-                adminService.getAuditLogs(),
-                api.get<number>("/notifications/unread-count")
-            ]);
-            setStats({
-                totalUsers: users.totalElements, 
-                totalDepartments: depts.totalElements,
-                totalAuditLogs: logs.totalElements,
-                unreadNotifications: unreadRes.data
-            });
-        } catch {
-            // Silently handle error
-        }
-    }, []);
-
     useEffect(() => {
-        loadStats();
-    }, [loadStats]);
+        const loadStats = async () => {
+            try {
+                const [users, depts, logs, unreadRes] = await Promise.all([
+                    userService.getUsers(),
+                    adminService.getDepartments(),
+                    adminService.getAuditLogs(),
+                    api.get<number>("/notifications/unread-count")
+                ]);
+                setStats({
+                    totalUsers: users.totalElements, 
+                    totalDepartments: depts.totalElements,
+                    totalAuditLogs: logs.totalElements,
+                    unreadNotifications: unreadRes.data
+                });
+            } catch {
+                // Silently handle error
+            }
+        };
+        void loadStats();
+    }, []);
 
     const handleExportAuditLogs = async () => {
         setIsExporting(true);
